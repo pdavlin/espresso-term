@@ -1,0 +1,28 @@
+{
+  "name": "reaprime-pwa",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "lit": "^3.3.2",
+    "uplot": "^1.6.32"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1",
+    "vite-plugin-pwa": "^1.2.0"
+  },
+  "pnpm": {
+    "executionEnv": {
+      "nodeVersion": "22.15.0"
+    }
+  },
+  "onlyBuiltDependencies": [
+    "esbuild"
+  ]
+}

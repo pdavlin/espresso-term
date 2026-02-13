@@ -1,0 +1,7 @@
+{
+  "id": "reaprime-pwa",
+  "name": "ReaPrime",
+  "version": "0.1.0",
+  "description": "PWA skin for Decent Espresso via Streamline gateway",
+  "entry": "index.html"
+}
