@@ -16,13 +16,18 @@ import type {
   DeviceInfo,
   WeightSnapshot,
 } from './types.ts';
+import type { CoffeeBag } from './airtable.ts';
 
 // ---------------------------------------------------------------------------
 // Flag
 // ---------------------------------------------------------------------------
 
-export function isMockMode(): boolean {
-  return localStorage.getItem('mock-mode') === 'true';
+export function isMockGateway(): boolean {
+  return localStorage.getItem('mock-gateway') === 'true';
+}
+
+export function isMockCoffee(): boolean {
+  return localStorage.getItem('mock-coffee') === 'true';
 }
 
 // ---------------------------------------------------------------------------
@@ -505,6 +510,40 @@ export class MockSocket<T> {
     this.handlers.clear();
   }
 }
+
+// ---------------------------------------------------------------------------
+// Mock coffee bags (Airtable stand-in)
+// ---------------------------------------------------------------------------
+
+export const mockCoffeeBags: CoffeeBag[] = [
+  {
+    id: 'rec-mock-1',
+    name: 'El Paraiso',
+    roaster: 'Manhattan',
+    country: 'Colombia',
+    processing: 'Washed',
+    roastLevel: 'Light',
+    archived: false,
+  },
+  {
+    id: 'rec-mock-2',
+    name: 'Guji Natural',
+    roaster: 'Onyx',
+    country: 'Ethiopia',
+    processing: 'Natural',
+    roastLevel: 'Light',
+    archived: false,
+  },
+  {
+    id: 'rec-mock-3',
+    name: 'Finca Deborah',
+    roaster: 'SEY',
+    country: 'Panama',
+    processing: 'Washed',
+    roastLevel: 'Light-Medium',
+    archived: true,
+  },
+];
 
 // ---------------------------------------------------------------------------
 // Mock socket generators

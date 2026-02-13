@@ -1,6 +1,6 @@
 import { getGatewayUrl } from './client.ts';
 import {
-  isMockMode,
+  isMockGateway,
   createMockMachineSocket,
   createMockScaleSocket,
   createMockWaterSocket,
@@ -90,7 +90,7 @@ export class GatewaySocket<T> {
 }
 
 // Pre-built channel instances (mock or real based on localStorage flag)
-const mock = isMockMode();
+const mock = isMockGateway();
 
 export const machineSocket = mock
   ? createMockMachineSocket()

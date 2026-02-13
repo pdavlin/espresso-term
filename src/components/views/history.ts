@@ -27,14 +27,16 @@ export class HistoryView extends LitElement {
 
     .shot-card {
       padding: var(--space-md);
-      background: var(--color-surface);
+      background: transparent;
       border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
+      border-radius: 0;
       cursor: pointer;
+      transition: border-color 0.15s ease-out, color 0.15s ease-out;
     }
 
     .shot-card:active {
-      background: var(--color-surface-alt);
+      border-color: var(--color-accent);
+      color: var(--color-accent);
     }
 
     .shot-header {
@@ -53,14 +55,59 @@ export class HistoryView extends LitElement {
       color: var(--color-text-secondary);
     }
 
+    .shot-detail {
+      position: fixed;
+      top: var(--status-height, 32px);
+      left: 0;
+      right: 0;
+      bottom: calc(var(--nav-height, 56px) + env(safe-area-inset-bottom));
+      display: flex;
+      flex-direction: column;
+      background: var(--color-bg);
+      z-index: 10;
+    }
+
+    .shot-detail-header {
+      flex-shrink: 0;
+      padding: var(--space-md);
+    }
+
     .shot-meta {
       font-size: 12px;
       color: var(--color-text-secondary);
-      font-family: var(--font-mono);
     }
 
     .detail {
-      margin-top: var(--space-md);
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .detail shot-graph {
+      height: 100%;
+    }
+
+    .shot-detail-footer {
+      flex-shrink: 0;
+      padding: var(--space-sm) var(--space-md);
+    }
+
+    .back-btn {
+      width: 100%;
+      padding: var(--space-sm) var(--space-md);
+      border: 1px solid var(--color-text);
+      border-radius: 0;
+      background: transparent;
+      color: var(--color-text);
+      font-family: inherit;
+      font-size: 14px;
+      cursor: pointer;
+      transition: border-color 0.15s ease-out, color 0.15s ease-out;
+    }
+
+    .back-btn:active {
+      border-color: var(--color-accent);
+      color: var(--color-accent);
     }
 
     .empty {
@@ -114,16 +161,22 @@ export class HistoryView extends LitElement {
 
     if (this.selectedShot) {
       return html`
-        <h2>${this.selectedShot.workflow.profile.title}</h2>
-        <div class="shot-meta">
-          ${formatTimestamp(this.selectedShot.timestamp)}
-          ${formatWeight(this.shotFinalWeight(this.selectedShot))}
-          ${formatDuration(this.shotDuration(this.selectedShot))}
+        <div class="shot-detail">
+          <div class="shot-detail-header">
+            <h2>${this.selectedShot.workflow.profile.title}</h2>
+            <div class="shot-meta">
+              ${formatTimestamp(this.selectedShot.timestamp)}
+              ${formatWeight(this.shotFinalWeight(this.selectedShot))}
+              ${formatDuration(this.shotDuration(this.selectedShot))}
+            </div>
+          </div>
+          <div class="detail">
+            <shot-graph .measurements=${this.selectedShot.measurements}></shot-graph>
+          </div>
+          <div class="shot-detail-footer">
+            <button class="back-btn" @click=${() => (this.selectedShot = null)}>Back</button>
+          </div>
         </div>
-        <div class="detail">
-          <shot-graph .measurements=${this.selectedShot.measurements}></shot-graph>
-        </div>
-        <button @click=${() => (this.selectedShot = null)}>Back</button>
       `;
     }
 

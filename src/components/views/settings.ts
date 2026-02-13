@@ -1,7 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { getMachineInfo, getDevices, getReaSettings } from '../../api/client.ts';
-import { isMockMode } from '../../api/mock.ts';
+import { isMockGateway, isMockCoffee } from '../../api/mock.ts';
 import type { MachineInfo, DeviceInfo, ReaSettings } from '../../api/types.ts';
 
 @customElement('settings-view')
@@ -138,7 +138,8 @@ export class SettingsView extends LitElement {
   @state() private devices: DeviceInfo[] = [];
   @state() private reaSettings: ReaSettings | null = null;
   @state() private gatewayUrl = localStorage.getItem('gateway-url') ?? '';
-  @state() private mockMode = isMockMode();
+  @state() private mockGateway = isMockGateway();
+  @state() private mockCoffee = isMockCoffee();
 
   connectedCallback(): void {
     super.connectedCallback();
@@ -157,12 +158,22 @@ export class SettingsView extends LitElement {
     if (results[2].status === 'fulfilled') this.reaSettings = results[2].value;
   }
 
-  private toggleMockMode() {
-    const next = !this.mockMode;
+  private toggleMockGateway() {
+    const next = !this.mockGateway;
     if (next) {
-      localStorage.setItem('mock-mode', 'true');
+      localStorage.setItem('mock-gateway', 'true');
     } else {
-      localStorage.removeItem('mock-mode');
+      localStorage.removeItem('mock-gateway');
+    }
+    window.location.reload();
+  }
+
+  private toggleMockCoffee() {
+    const next = !this.mockCoffee;
+    if (next) {
+      localStorage.setItem('mock-coffee', 'true');
+    } else {
+      localStorage.removeItem('mock-coffee');
     }
     window.location.reload();
   }
@@ -196,14 +207,25 @@ export class SettingsView extends LitElement {
       <fieldset>
         <legend>development</legend>
         <div class="toggle-row">
-          <span class="field-label">Mock Mode</span>
+          <span class="field-label">Mock gateway</span>
           <label>
             <input
               type="checkbox"
-              .checked=${this.mockMode}
-              @change=${this.toggleMockMode}
+              .checked=${this.mockGateway}
+              @change=${this.toggleMockGateway}
             />
-            Simulate gateway data
+            Simulate machine data
+          </label>
+        </div>
+        <div class="toggle-row">
+          <span class="field-label">Mock coffee</span>
+          <label>
+            <input
+              type="checkbox"
+              .checked=${this.mockCoffee}
+              @change=${this.toggleMockCoffee}
+            />
+            Simulate Airtable data
           </label>
         </div>
       </fieldset>

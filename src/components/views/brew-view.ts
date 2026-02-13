@@ -10,6 +10,7 @@ import {
 } from '../../api/client.ts';
 import { formatPressure, formatFlow, formatWeight, formatDuration } from '../../utils/format.ts';
 import type { Profile, ProfileRecord } from '../../api/types.ts';
+import { getCoffeeBags, type CoffeeBag } from '../../api/airtable.ts';
 import uPlot from 'uplot';
 import uPlotCSS from 'uplot/dist/uPlot.min.css?inline';
 
@@ -28,7 +29,6 @@ export class BrewView extends LitElement {
       padding: var(--space-md);
       max-width: 480px;
       margin: 0 auto;
-      width: 100%;
     }
 
     /* Dose step */
@@ -53,12 +53,13 @@ export class BrewView extends LitElement {
     }
 
     .dose-stepper button {
+      flex-shrink: 0;
       width: 48px;
       height: 48px;
-      border: 1px solid var(--color-text);
+      border: 1px solid var(--base_07);
       border-radius: 0;
       background: transparent;
-      color: var(--color-text);
+      color: var(--base_07);
       font-family: inherit;
       font-size: 24px;
       cursor: pointer;
@@ -75,7 +76,6 @@ export class BrewView extends LitElement {
 
     .dose-value {
       font-size: 48px;
-      min-width: 120px;
       text-align: center;
     }
 
@@ -89,38 +89,59 @@ export class BrewView extends LitElement {
       color: var(--color-text-secondary);
     }
 
-    /* Profile step */
+    /* Shared picker card + list */
 
-    .profile-card {
-      border: 1px solid var(--color-border);
-      padding: 0.75rem 1rem;
+    .picker-card {
+      position: relative;
+      border: 1px solid var(--base_07);
+      padding: var(--space-sm) var(--space-md);
+      padding-top: calc(var(--space-sm) + 10px);
       width: 100%;
-      transition: border-color 0.15s ease-out;
+      cursor: pointer;
+      box-sizing: border-box;
+      color: var(--base_07);
+      transition: border-color 0.15s ease-out, color 0.15s ease-out;
     }
 
-    .profile-card legend {
-      padding: 0 0.5em;
-      color: var(--base_04, #7e7777);
+    .picker-card:active {
+      border-color: var(--color-accent);
+    }
+
+    .picker-card:active .picker-card-label {
+      color: var(--color-accent);
+    }
+
+    .picker-card-label {
+      position: absolute;
+      top: -0.55em;
+      left: 0.75rem;
+      padding: 0 0.25em;
+      background: var(--color-bg);
+      color: var(--base_07);
       font-weight: bold;
       font-size: 0.75rem;
       text-transform: lowercase;
       transition: color 0.15s ease-out;
     }
 
-    .profile-card-title {
-      font-size: 18px;
+    .picker-card-title {
+      font-size: 16px;
       font-weight: 600;
-      margin-bottom: var(--space-xs);
     }
 
-    .profile-card-meta {
+    .picker-card-meta {
       font-size: 13px;
       color: var(--color-text-secondary);
-      display: flex;
-      gap: var(--space-md);
+      margin-top: 2px;
     }
 
-    .profile-list {
+    .picker-card-empty {
+      font-size: 14px;
+      color: var(--color-text-secondary);
+      transition: color 0.15s ease-out;
+    }
+
+    .picker-list {
       display: flex;
       flex-direction: column;
       gap: var(--space-sm);
@@ -128,23 +149,41 @@ export class BrewView extends LitElement {
       margin-top: var(--space-md);
     }
 
-    .profile-list-item {
+    .picker-list-item {
       padding: var(--space-sm) var(--space-md);
       background: transparent;
-      border: 1px solid var(--color-border);
+      border: 1px solid var(--base_07);
       border-radius: 0;
       cursor: pointer;
       font-size: 14px;
+      color: var(--base_07);
       transition: border-color 0.15s ease-out, color 0.15s ease-out;
     }
 
-    .profile-list-item:active {
+    .picker-list-item:active {
       border-color: var(--color-accent);
       color: var(--color-accent);
     }
 
-    .profile-list-item[data-selected] {
+    .picker-list-item[data-selected] {
       border-color: var(--color-accent);
+      color: var(--color-accent);
+    }
+
+    .picker-list-item-sub {
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      margin-top: 2px;
+    }
+
+    .picker-list-item[data-archived] {
+      opacity: 0.4;
+    }
+
+    .picker-list-divider {
+      border: none;
+      border-top: 1px solid var(--color-border);
+      margin: var(--space-xs) 0;
     }
 
     /* Shot step - fixed overlay that fills between status bar and nav */
@@ -246,10 +285,10 @@ export class BrewView extends LitElement {
     .btn {
       min-height: 44px;
       padding: var(--space-sm) var(--space-lg);
-      border: 1px solid var(--color-text);
+      border: 1px solid var(--base_07);
       border-radius: 0;
       background: transparent;
-      color: var(--color-text);
+      color: var(--base_07);
       font-family: inherit;
       font-size: 16px;
       cursor: pointer;
@@ -295,6 +334,9 @@ export class BrewView extends LitElement {
   @state() private selectedProfile: Profile | null = null;
   @state() private profiles: ProfileRecord[] = [];
   @state() private showProfileList = false;
+  @state() private coffeeBags: CoffeeBag[] = [];
+  @state() private selectedCoffee: CoffeeBag | null = null;
+  @state() private showCoffeeList = false;
 
   private plot: uPlot | null = null;
   private chartContainer: HTMLDivElement | null = null;
@@ -313,13 +355,33 @@ export class BrewView extends LitElement {
   }
 
   private async loadDefaults() {
+    let workflowCoffeeName: string | null = null;
     try {
       const workflow = await getWorkflow();
       this.doseIn = workflow.doseData.doseIn;
       this.selectedProfile = workflow.profile;
+      workflowCoffeeName = workflow.coffeeData?.name ?? null;
     } catch {
       // Gateway not available
     }
+
+    try {
+      this.coffeeBags = await getCoffeeBags();
+      if (workflowCoffeeName) {
+        this.selectedCoffee = this.coffeeBags.find((b) => b.name === workflowCoffeeName) ?? null;
+      }
+    } catch {
+      // Airtable not available
+    }
+  }
+
+  private toggleCoffeeList() {
+    this.showCoffeeList = !this.showCoffeeList;
+  }
+
+  private selectCoffee(bag: CoffeeBag) {
+    this.selectedCoffee = bag;
+    this.showCoffeeList = false;
   }
 
   private adjustDose(delta: number) {
@@ -346,7 +408,13 @@ export class BrewView extends LitElement {
 
   private async startShot() {
     try {
-      await updateWorkflow({ doseData: { doseIn: this.doseIn, doseOut: this.doseIn * 2 } });
+      const partial: Record<string, unknown> = {
+        doseData: { doseIn: this.doseIn, doseOut: this.doseIn * 2 },
+      };
+      if (this.selectedCoffee) {
+        partial.coffeeData = { name: this.selectedCoffee.name, roaster: this.selectedCoffee.roaster };
+      }
+      await updateWorkflow(partial);
     } catch {
       // Non-critical
     }
@@ -537,12 +605,59 @@ export class BrewView extends LitElement {
           ${this.selectedProfile
             ? html`<span class="profile-label">${this.selectedProfile.title}</span>`
             : nothing}
+          <div class="picker-card" @click=${() => this.toggleCoffeeList()}>
+            <span class="picker-card-label">coffee</span>
+            ${this.selectedCoffee
+              ? html`
+                  <div class="picker-card-title">${this.selectedCoffee.name}</div>
+                  ${this.selectedCoffee.roaster
+                    ? html`<div class="picker-card-meta">${this.selectedCoffee.roaster}</div>`
+                    : nothing}
+                `
+              : html`<div class="picker-card-empty">Select coffee</div>`}
+          </div>
+          ${this.showCoffeeList ? this.renderCoffeeList() : nothing}
           <div class="actions">
             <button class="btn btn-primary btn-full" @click=${() => { this.step = 'profile'; }}>
               Next
             </button>
           </div>
         </div>
+      </div>
+    `;
+  }
+
+  private renderCoffeeItem(bag: CoffeeBag) {
+    return html`
+      <div
+        class="picker-list-item"
+        ?data-selected=${this.selectedCoffee?.id === bag.id}
+        ?data-archived=${bag.archived}
+        @click=${() => this.selectCoffee(bag)}
+      >
+        ${bag.name}
+        ${bag.roaster
+          ? html`<div class="picker-list-item-sub">${bag.roaster}</div>`
+          : nothing}
+      </div>
+    `;
+  }
+
+  private renderCoffeeList() {
+    if (this.coffeeBags.length === 0) {
+      return html`<div class="loading">No coffee bags found</div>`;
+    }
+    const active = this.coffeeBags.filter((b) => !b.archived);
+    const archived = this.coffeeBags.filter((b) => b.archived);
+    return html`
+      <div class="picker-list">
+        ${active.map((bag) => this.renderCoffeeItem(bag))}
+        ${archived.length > 0
+          ? html`
+              <hr class="picker-list-divider" />
+              ${archived.map((bag) => this.renderCoffeeItem(bag))}
+            `
+          : nothing}
       </div>
     `;
   }
@@ -557,46 +672,44 @@ export class BrewView extends LitElement {
   private renderProfile() {
     return html`
       <div class="step-content">
-        ${this.selectedProfile
-          ? html`
-              <fieldset class="profile-card">
-                <legend>profile</legend>
-                <div class="profile-card-title">${this.selectedProfile.title}</div>
-                <div class="profile-card-meta">
-                  <span>${this.selectedProfile.author}</span>
-                  <span>${this.selectedProfile.beverage_type}</span>
-                  <span>${this.selectedProfile.steps.length} steps</span>
+        <div class="picker-card" @click=${() => this.toggleProfileList()}>
+          <span class="picker-card-label">profile</span>
+          ${this.selectedProfile
+            ? html`
+                <div class="picker-card-title">${this.selectedProfile.title}</div>
+                <div class="picker-card-meta">
+                  ${this.selectedProfile.author}
+                  / ${this.selectedProfile.beverage_type}
+                  / ${this.selectedProfile.steps.length} steps
                 </div>
-              </fieldset>
-            `
-          : html`<div class="loading">No profile selected</div>`}
-
-        <div class="actions">
-          <button class="btn" @click=${() => this.toggleProfileList()}>
-            ${this.showProfileList ? 'Cancel' : 'Change'}
-          </button>
-          <button class="btn btn-primary" @click=${() => this.startShot()}>
-            Start
-          </button>
+              `
+            : html`<div class="picker-card-empty">Select profile</div>`}
         </div>
 
         ${this.showProfileList
           ? html`
-              <div class="profile-list">
+              <div class="picker-list">
                 ${this.profiles.map(
                   (rec) => html`
                     <div
-                      class="profile-list-item"
+                      class="picker-list-item"
                       ?data-selected=${this.selectedProfile?.title === rec.profile.title}
                       @click=${() => this.selectProfile(rec)}
                     >
                       ${rec.profile.title}
+                      <div class="picker-list-item-sub">${rec.profile.author}</div>
                     </div>
                   `
                 )}
               </div>
             `
           : nothing}
+
+        <div class="actions">
+          <button class="btn btn-primary btn-full" @click=${() => this.startShot()}>
+            Start
+          </button>
+        </div>
       </div>
     `;
   }

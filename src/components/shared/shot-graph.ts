@@ -1,14 +1,22 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, css, unsafeCSS } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { ShotSnapshot } from '../../api/types.ts';
 import uPlot from 'uplot';
+import uPlotCSS from 'uplot/dist/uPlot.min.css?inline';
 
 @customElement('shot-graph')
 export class ShotGraph extends LitElement {
   static styles = css`
+    ${unsafeCSS(uPlotCSS)}
+
     :host {
       display: block;
       overflow: hidden;
+    }
+
+    .chart {
+      width: 100%;
+      height: 100%;
     }
   `;
 

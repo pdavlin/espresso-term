@@ -11,7 +11,7 @@ import type {
   ShotRecord,
   DeviceInfo,
 } from './types.ts';
-import { isMockMode, mockRequest } from './mock.ts';
+import { isMockGateway, mockRequest } from './mock.ts';
 
 function getGatewayUrl(): string {
   const override = localStorage.getItem('gateway-url');
@@ -20,7 +20,7 @@ function getGatewayUrl(): string {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  if (isMockMode()) {
+  if (isMockGateway()) {
     return mockRequest<T>(path, init);
   }
   const url = `${getGatewayUrl()}${path}`;
