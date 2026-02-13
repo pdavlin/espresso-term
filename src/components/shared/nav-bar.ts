@@ -25,8 +25,8 @@ export class NavBar extends LitElement {
       left: 0;
       right: 0;
       height: var(--nav-height, 56px);
-      background: var(--color-surface, #242424);
-      border-top: 1px solid var(--color-border, #3a3a3a);
+      background: var(--color-surface, #292424);
+      border-top: 1px solid var(--color-border, #655d5d);
       padding-bottom: env(safe-area-inset-bottom);
       z-index: 100;
     }
@@ -46,15 +46,16 @@ export class NavBar extends LitElement {
       align-items: center;
       gap: 2px;
       text-decoration: none;
-      color: var(--color-text-secondary, #999);
+      color: var(--color-text-secondary, #8a8585);
       font-size: 10px;
       padding: 4px 8px;
-      border-radius: var(--radius-sm, 4px);
-      transition: color 0.15s;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s ease-out, border-color 0.15s ease-out;
     }
 
     a[data-active] {
-      color: var(--color-accent, #4a9eff);
+      color: var(--color-accent, #4b8b8b);
+      border-color: var(--color-accent, #4b8b8b);
     }
   `;
 

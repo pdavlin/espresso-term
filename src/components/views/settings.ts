@@ -18,12 +18,30 @@ export class SettingsView extends LitElement {
       margin-bottom: var(--space-md);
     }
 
-    h3 {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--color-text-secondary);
-      margin-top: var(--space-lg);
-      margin-bottom: var(--space-sm);
+    fieldset {
+      border: 1px solid var(--color-border);
+      padding: 0.75rem 1rem;
+      margin: var(--space-md) 0;
+      transition: border-color 0.15s ease-out;
+    }
+
+    fieldset:hover,
+    fieldset:focus-within {
+      border-color: var(--color-accent);
+    }
+
+    fieldset legend {
+      padding: 0 0.5em;
+      color: var(--base_04, #7e7777);
+      font-weight: bold;
+      font-size: 0.75rem;
+      text-transform: lowercase;
+      transition: color 0.15s ease-out;
+    }
+
+    fieldset:hover legend,
+    fieldset:focus-within legend {
+      color: var(--color-accent);
     }
 
     .field {
@@ -35,12 +53,15 @@ export class SettingsView extends LitElement {
       font-size: 14px;
     }
 
+    .field:last-child {
+      border-bottom: none;
+    }
+
     .field-label {
       color: var(--color-text-secondary);
     }
 
     .field-value {
-      font-family: var(--font-mono);
     }
 
     .device {
@@ -68,19 +89,32 @@ export class SettingsView extends LitElement {
       padding: var(--space-xs) var(--space-sm);
       background: var(--color-surface);
       border: 1px solid var(--color-border);
-      border-radius: var(--radius-sm);
+      border-radius: 0;
       color: var(--color-text);
+      font-family: inherit;
       font-size: 14px;
+      transition: border-color 0.15s ease-out;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--color-accent);
     }
 
     button {
       padding: var(--space-xs) var(--space-md);
       border: 1px solid var(--color-border);
-      border-radius: var(--radius-sm);
+      border-radius: 0;
       background: var(--color-surface);
       color: var(--color-text);
+      font-family: inherit;
       font-size: 14px;
       cursor: pointer;
+      transition: border-color 0.15s ease-out, color 0.15s ease-out;
+    }
+
+    button:active {
+      border-color: var(--color-accent);
+      color: var(--color-accent);
     }
 
     .toggle-row {
@@ -146,77 +180,87 @@ export class SettingsView extends LitElement {
     return html`
       <h2>Settings</h2>
 
-      <h3>Gateway</h3>
-      <div class="gateway-input">
-        <input
-          type="text"
-          placeholder="http://tablet-ip:8080"
-          .value=${this.gatewayUrl}
-          @input=${(e: Event) => (this.gatewayUrl = (e.target as HTMLInputElement).value)}
-        />
-        <button @click=${this.saveGatewayUrl}>Save</button>
-      </div>
-
-      <h3>Development</h3>
-      <div class="toggle-row">
-        <span class="field-label">Mock Mode</span>
-        <label>
+      <fieldset>
+        <legend>gateway</legend>
+        <div class="gateway-input">
           <input
-            type="checkbox"
-            .checked=${this.mockMode}
-            @change=${this.toggleMockMode}
+            type="text"
+            placeholder="http://tablet-ip:8080"
+            .value=${this.gatewayUrl}
+            @input=${(e: Event) => (this.gatewayUrl = (e.target as HTMLInputElement).value)}
           />
-          Simulate gateway data
-        </label>
-      </div>
+          <button @click=${this.saveGatewayUrl}>Save</button>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>development</legend>
+        <div class="toggle-row">
+          <span class="field-label">Mock Mode</span>
+          <label>
+            <input
+              type="checkbox"
+              .checked=${this.mockMode}
+              @change=${this.toggleMockMode}
+            />
+            Simulate gateway data
+          </label>
+        </div>
+      </fieldset>
 
       ${this.machineInfo
         ? html`
-            <h3>Machine</h3>
-            <div class="field">
-              <span class="field-label">Model</span>
-              <span class="field-value">${this.machineInfo.model}</span>
-            </div>
-            <div class="field">
-              <span class="field-label">Serial</span>
-              <span class="field-value">${this.machineInfo.serialNumber}</span>
-            </div>
-            <div class="field">
-              <span class="field-label">Firmware</span>
-              <span class="field-value">${this.machineInfo.version}</span>
-            </div>
-            <div class="field">
-              <span class="field-label">GHC</span>
-              <span class="field-value">${this.machineInfo.GHC ? 'Yes' : 'No'}</span>
-            </div>
+            <fieldset>
+              <legend>machine</legend>
+              <div class="field">
+                <span class="field-label">Model</span>
+                <span class="field-value">${this.machineInfo.model}</span>
+              </div>
+              <div class="field">
+                <span class="field-label">Serial</span>
+                <span class="field-value">${this.machineInfo.serialNumber}</span>
+              </div>
+              <div class="field">
+                <span class="field-label">Firmware</span>
+                <span class="field-value">${this.machineInfo.version}</span>
+              </div>
+              <div class="field">
+                <span class="field-label">GHC</span>
+                <span class="field-value">${this.machineInfo.GHC ? 'Yes' : 'No'}</span>
+              </div>
+            </fieldset>
           `
         : ''}
 
       ${this.devices.length > 0
         ? html`
-            <h3>Devices</h3>
-            ${this.devices.map(
-              (d) => html`
-                <div class="device">
-                  <div class="device-name">${d.name}</div>
-                  <div class="device-meta">${d.type} / ${d.state}</div>
-                </div>
-              `
-            )}
+            <fieldset>
+              <legend>devices</legend>
+              ${this.devices.map(
+                (d) => html`
+                  <div class="device">
+                    <div class="device-name">${d.name}</div>
+                    <div class="device-meta">${d.type} / ${d.state}</div>
+                  </div>
+                `
+              )}
+            </fieldset>
           `
         : ''}
 
       ${this.reaSettings
         ? html`
-            <h3>Gateway Settings</h3>
-            <div class="field">
-              <span class="field-label">Mode</span>
-              <span class="field-value">${this.reaSettings.gatewayMode}</span>
-            </div>
-            <div class="field">
-              <span class="field-label">Log Level</span>
-              <span class="field-value">${this.reaSettings.logLevel}</span>
-            </div>
+            <fieldset>
+              <legend>gateway settings</legend>
+              <div class="field">
+                <span class="field-label">Mode</span>
+                <span class="field-value">${this.reaSettings.gatewayMode}</span>
+              </div>
+              <div class="field">
+                <span class="field-label">Log Level</span>
+                <span class="field-value">${this.reaSettings.logLevel}</span>
+              </div>
+            </fieldset>
           `
         : ''}
     `;

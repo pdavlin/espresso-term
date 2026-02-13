@@ -12,10 +12,10 @@ export class StatusBar extends LitElement {
       justify-content: space-between;
       height: var(--status-height, 32px);
       padding: 0 var(--space-md, 16px);
-      background: var(--color-surface, #242424);
-      border-bottom: 1px solid var(--color-border, #3a3a3a);
+      background: var(--color-surface, #292424);
+      border-bottom: 1px solid var(--color-border, #655d5d);
       font-size: 12px;
-      color: var(--color-text-secondary, #999);
+      color: var(--color-text-secondary, #8a8585);
     }
 
     .state {
@@ -24,7 +24,7 @@ export class StatusBar extends LitElement {
     }
 
     .state[data-brewing] {
-      color: var(--color-accent, #4a9eff);
+      color: var(--color-accent, #4b8b8b);
     }
 
     .temps {
@@ -34,7 +34,7 @@ export class StatusBar extends LitElement {
     }
 
     .disconnected {
-      color: var(--color-warning, #ff9800);
+      color: var(--color-warning, #b45a3c);
     }
   `;
 

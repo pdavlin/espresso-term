@@ -58,16 +58,16 @@ export class ShotGraph extends LitElement {
         y2: { auto: true },
       },
       axes: [
-        { stroke: '#666', grid: { stroke: '#333' } },
-        { stroke: '#666', grid: { stroke: '#333' }, size: 40 },
-        { side: 1, stroke: '#666', size: 40, grid: { show: false } },
+        { stroke: '#655d5d', grid: { stroke: '#292424' } },
+        { stroke: '#655d5d', grid: { stroke: '#292424' }, size: 40 },
+        { side: 1, stroke: '#655d5d', size: 40, grid: { show: false } },
       ],
       series: [
         {},
-        { label: 'Pressure', stroke: '#4a9eff', width: 2, scale: 'y' },
-        { label: 'Flow', stroke: '#4caf50', width: 2, scale: 'y' },
-        { label: 'Weight', stroke: '#ff9800', width: 2, scale: 'y2' },
-        { label: 'Temp', stroke: '#f44336', width: 1, scale: 'y2', dash: [4, 4] },
+        { label: 'Pressure', stroke: '#5485b6', width: 2, scale: 'y' },
+        { label: 'Flow', stroke: '#4b8b8b', width: 2, scale: 'y' },
+        { label: 'Weight', stroke: '#b45a3c', width: 2, scale: 'y2' },
+        { label: 'Temp', stroke: '#ca4949', width: 1, scale: 'y2', dash: [4, 4] },
       ],
     };
   }

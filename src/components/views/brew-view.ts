@@ -55,23 +55,25 @@ export class BrewView extends LitElement {
     .dose-stepper button {
       width: 48px;
       height: 48px;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      background: var(--color-surface);
+      border: 1px solid var(--color-text);
+      border-radius: 0;
+      background: transparent;
       color: var(--color-text);
+      font-family: inherit;
       font-size: 24px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
+      transition: border-color 0.15s ease-out, color 0.15s ease-out;
     }
 
     .dose-stepper button:active {
-      background: var(--color-surface-alt);
+      border-color: var(--color-accent);
+      color: var(--color-accent);
     }
 
     .dose-value {
-      font-family: var(--font-mono);
       font-size: 48px;
       min-width: 120px;
       text-align: center;
@@ -90,11 +92,19 @@ export class BrewView extends LitElement {
     /* Profile step */
 
     .profile-card {
-      background: var(--color-surface);
       border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      padding: var(--space-md);
+      padding: 0.75rem 1rem;
       width: 100%;
+      transition: border-color 0.15s ease-out;
+    }
+
+    .profile-card legend {
+      padding: 0 0.5em;
+      color: var(--base_04, #7e7777);
+      font-weight: bold;
+      font-size: 0.75rem;
+      text-transform: lowercase;
+      transition: color 0.15s ease-out;
     }
 
     .profile-card-title {
@@ -120,15 +130,17 @@ export class BrewView extends LitElement {
 
     .profile-list-item {
       padding: var(--space-sm) var(--space-md);
-      background: var(--color-surface);
+      background: transparent;
       border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
+      border-radius: 0;
       cursor: pointer;
       font-size: 14px;
+      transition: border-color 0.15s ease-out, color 0.15s ease-out;
     }
 
     .profile-list-item:active {
-      background: var(--color-surface-alt);
+      border-color: var(--color-accent);
+      color: var(--color-accent);
     }
 
     .profile-list-item[data-selected] {
@@ -169,7 +181,6 @@ export class BrewView extends LitElement {
     }
 
     .reading-value {
-      font-family: var(--font-mono);
       font-size: 24px;
     }
 
@@ -181,7 +192,6 @@ export class BrewView extends LitElement {
 
     .shot-timer {
       text-align: center;
-      font-family: var(--font-mono);
       font-size: 16px;
       color: var(--color-text-secondary);
       margin-bottom: var(--space-sm);
@@ -190,18 +200,20 @@ export class BrewView extends LitElement {
     /* Summary overlay */
 
     .summary {
-      background: var(--color-surface);
       border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      padding: var(--space-lg);
+      padding: 0.75rem 1rem;
       margin-top: var(--space-md);
       text-align: center;
+      transition: border-color 0.15s ease-out;
     }
 
-    .summary h3 {
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: var(--space-md);
+    .summary legend {
+      padding: 0 0.5em;
+      color: var(--base_04, #7e7777);
+      font-weight: bold;
+      font-size: 0.75rem;
+      text-transform: lowercase;
+      transition: color 0.15s ease-out;
     }
 
     .summary-stats {
@@ -212,7 +224,6 @@ export class BrewView extends LitElement {
     }
 
     .summary-stat-value {
-      font-family: var(--font-mono);
       font-size: 20px;
     }
 
@@ -235,32 +246,34 @@ export class BrewView extends LitElement {
     .btn {
       min-height: 44px;
       padding: var(--space-sm) var(--space-lg);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      background: var(--color-surface);
+      border: 1px solid var(--color-text);
+      border-radius: 0;
+      background: transparent;
       color: var(--color-text);
+      font-family: inherit;
       font-size: 16px;
       cursor: pointer;
+      transition: border-color 0.15s ease-out, color 0.15s ease-out;
     }
 
     .btn:active {
-      background: var(--color-surface-alt);
+      border-color: var(--color-accent);
+      color: var(--color-accent);
     }
 
     .btn-primary {
-      background: var(--color-accent);
       border-color: var(--color-accent);
-      color: #fff;
+      color: var(--color-accent);
     }
 
     .btn-primary:active {
-      background: var(--color-accent-dim);
+      border-color: var(--color-accent-dim);
+      color: var(--color-accent-dim);
     }
 
     .btn-danger {
-      background: var(--color-error);
       border-color: var(--color-error);
-      color: #fff;
+      color: var(--color-error);
     }
 
     .btn-full {
@@ -472,16 +485,16 @@ export class BrewView extends LitElement {
         y2: { auto: true },
       },
       axes: [
-        { stroke: '#666', grid: { stroke: '#333' } },
-        { stroke: '#666', grid: { stroke: '#333' }, size: 40 },
-        { side: 1, stroke: '#666', size: 40, grid: { show: false } },
+        { stroke: '#655d5d', grid: { stroke: '#292424' } },
+        { stroke: '#655d5d', grid: { stroke: '#292424' }, size: 40 },
+        { side: 1, stroke: '#655d5d', size: 40, grid: { show: false } },
       ],
       series: [
         {},
-        { label: 'Pressure', stroke: '#4a9eff', width: 2, scale: 'y' },
-        { label: 'Flow', stroke: '#4caf50', width: 2, scale: 'y' },
-        { label: 'Weight', stroke: '#ff9800', width: 2, scale: 'y2' },
-        { label: 'Temp', stroke: '#f44336', width: 1, scale: 'y2', dash: [4, 4] },
+        { label: 'Pressure', stroke: '#5485b6', width: 2, scale: 'y' },
+        { label: 'Flow', stroke: '#4b8b8b', width: 2, scale: 'y' },
+        { label: 'Weight', stroke: '#b45a3c', width: 2, scale: 'y2' },
+        { label: 'Temp', stroke: '#ca4949', width: 1, scale: 'y2', dash: [4, 4] },
       ],
     };
   }
@@ -546,14 +559,15 @@ export class BrewView extends LitElement {
       <div class="step-content">
         ${this.selectedProfile
           ? html`
-              <div class="profile-card">
+              <fieldset class="profile-card">
+                <legend>profile</legend>
                 <div class="profile-card-title">${this.selectedProfile.title}</div>
                 <div class="profile-card-meta">
                   <span>${this.selectedProfile.author}</span>
                   <span>${this.selectedProfile.beverage_type}</span>
                   <span>${this.selectedProfile.steps.length} steps</span>
                 </div>
-              </div>
+              </fieldset>
             `
           : html`<div class="loading">No profile selected</div>`}
 
@@ -627,8 +641,8 @@ export class BrewView extends LitElement {
 
   private renderSummary() {
     return html`
-      <div class="summary">
-        <h3>Shot Complete</h3>
+      <fieldset class="summary">
+        <legend>shot complete</legend>
         <div class="summary-stats">
           <div>
             <div class="summary-stat-value">${formatWeight(this.finalWeight)}</div>
@@ -646,7 +660,7 @@ export class BrewView extends LitElement {
         <button class="btn btn-primary btn-full" @click=${() => this.resetToStart()}>
           New Shot
         </button>
-      </div>
+      </fieldset>
     `;
   }
 

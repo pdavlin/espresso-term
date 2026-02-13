@@ -3,8 +3,8 @@
   "short_name": "EspTerm",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#1a1a1a",
-  "theme_color": "#1a1a1a",
+  "background_color": "#1b1818",
+  "theme_color": "#1b1818",
   "icons": [
     {
       "src": "/icon-192.png",
