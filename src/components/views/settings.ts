@@ -84,7 +84,8 @@ export class SettingsView extends LitElement {
       gap: var(--space-sm);
     }
 
-    input[type="text"] {
+    input[type="text"],
+    input[type="password"] {
       flex: 1;
       padding: var(--space-xs) var(--space-sm);
       background: var(--color-surface);
@@ -96,8 +97,29 @@ export class SettingsView extends LitElement {
       transition: border-color 0.15s ease-out;
     }
 
-    input[type="text"]:focus {
+    input[type="text"]:focus,
+    input[type="password"]:focus {
       border-color: var(--color-accent);
+    }
+
+    .config-row {
+      display: flex;
+      gap: var(--space-sm);
+      margin-top: var(--space-sm);
+    }
+
+    .config-row:first-child {
+      margin-top: var(--space-md);
+    }
+
+    .config-label {
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      margin-top: var(--space-md);
+    }
+
+    .config-label:first-child {
+      margin-top: 0;
     }
 
     button {
@@ -138,6 +160,8 @@ export class SettingsView extends LitElement {
   @state() private devices: DeviceInfo[] = [];
   @state() private reaSettings: ReaSettings | null = null;
   @state() private gatewayUrl = localStorage.getItem('gateway-url') ?? '';
+  @state() private airtablePat = localStorage.getItem('airtable-pat') ?? '';
+  @state() private airtableBaseId = localStorage.getItem('airtable-base-id') ?? '';
   @state() private mockGateway = isMockGateway();
   @state() private mockCoffee = isMockCoffee();
 
@@ -178,6 +202,20 @@ export class SettingsView extends LitElement {
     window.location.reload();
   }
 
+  private saveAirtableConfig() {
+    if (this.airtablePat) {
+      localStorage.setItem('airtable-pat', this.airtablePat);
+    } else {
+      localStorage.removeItem('airtable-pat');
+    }
+    if (this.airtableBaseId) {
+      localStorage.setItem('airtable-base-id', this.airtableBaseId);
+    } else {
+      localStorage.removeItem('airtable-base-id');
+    }
+    window.location.reload();
+  }
+
   private saveGatewayUrl() {
     if (this.gatewayUrl) {
       localStorage.setItem('gateway-url', this.gatewayUrl);
@@ -201,6 +239,31 @@ export class SettingsView extends LitElement {
             @input=${(e: Event) => (this.gatewayUrl = (e.target as HTMLInputElement).value)}
           />
           <button @click=${this.saveGatewayUrl}>Save</button>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>airtable</legend>
+        <div class="config-label">Personal access token</div>
+        <div class="config-row">
+          <input
+            type="password"
+            placeholder="patXXXXXX..."
+            .value=${this.airtablePat}
+            @input=${(e: Event) => (this.airtablePat = (e.target as HTMLInputElement).value)}
+          />
+        </div>
+        <div class="config-label">Base ID</div>
+        <div class="config-row">
+          <input
+            type="text"
+            placeholder="appXXXXXX..."
+            .value=${this.airtableBaseId}
+            @input=${(e: Event) => (this.airtableBaseId = (e.target as HTMLInputElement).value)}
+          />
+        </div>
+        <div class="config-row">
+          <button @click=${this.saveAirtableConfig}>Save</button>
         </div>
       </fieldset>
 
