@@ -1,5 +1,5 @@
 import type { ReactiveController, ReactiveControllerHost } from 'lit';
-import type { MachineSnapshot, ScaleSnapshot, WaterLevels, ShotSettings } from '../api/types.ts';
+import type { MachineSnapshot, ScaleSnapshot, WaterLevels, ShotSettings, ShotSnapshot } from '../api/types.ts';
 import { machineSocket, scaleSocket, waterLevelsSocket, shotSettingsSocket } from '../api/websocket.ts';
 
 export class MachineController implements ReactiveController {
@@ -7,6 +7,9 @@ export class MachineController implements ReactiveController {
   scale: ScaleSnapshot | null = null;
   water: WaterLevels | null = null;
   shotSettings: ShotSettings | null = null;
+
+  private recording = false;
+  private measurements: ShotSnapshot[] = [];
 
   private unsubMachine?: () => void;
   private unsubScale?: () => void;
@@ -17,9 +20,35 @@ export class MachineController implements ReactiveController {
     host.addController(this);
   }
 
+  startRecording(): void {
+    this.recording = true;
+    this.measurements = [];
+  }
+
+  stopRecording(): void {
+    this.recording = false;
+  }
+
+  get isRecording(): boolean {
+    return this.recording;
+  }
+
+  get recordedMeasurements(): ShotSnapshot[] {
+    return this.measurements;
+  }
+
   hostConnected(): void {
     this.unsubMachine = machineSocket.subscribe((data) => {
       this.snapshot = data;
+      if (this.recording && data.state.state === 'espresso') {
+        this.measurements = [...this.measurements, {
+          machine: data,
+          scale: this.scale
+            ? { timestamp: this.scale.timestamp, weight: this.scale.weight, weightFlow: 0 }
+            : null,
+          volume: null,
+        }];
+      }
       this.host.requestUpdate();
     });
 

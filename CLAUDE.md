@@ -1,4 +1,4 @@
-# ReaPrime PWA
+# Espresso Term
 
 PWA to control a Decent Espresso machine via the Streamline gateway API. The gateway runs on an Android tablet in tracking mode, maintaining BLE connections and handling stop-at-weight. The PWA is the primary control interface, accessed from an iPhone.
 
@@ -28,7 +28,7 @@ Stack: Lit + Vite + uPlot + TypeScript. Deployed as a gateway skin.
 ## File Structure
 
 ```
-reaprime-pwa/
+espresso-term/
 ├── index.html
 ├── manifest.json               # Gateway skin manifest
 ├── package.json
@@ -378,7 +378,7 @@ interface ReaSettings {
 Build output in `dist/` gets installed via:
 ```
 POST /api/v1/webui/skins/install/github-branch
-{ "repo": "owner/reaprime-pwa", "branch": "main" }
+{ "repo": "owner/espresso-term", "branch": "main" }
 ```
 
 The gateway serves the skin's static files. The skin manifest (`manifest.json`) at the root identifies the skin.

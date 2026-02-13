@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { getMachineInfo, getDevices, getReaSettings } from '../../api/client.ts';
+import { isMockMode } from '../../api/mock.ts';
 import type { MachineInfo, DeviceInfo, ReaSettings } from '../../api/types.ts';
 
 @customElement('settings-view')
@@ -81,12 +82,29 @@ export class SettingsView extends LitElement {
       font-size: 14px;
       cursor: pointer;
     }
+
+    .toggle-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-sm) 0;
+      border-bottom: 1px solid var(--color-border);
+      font-size: 14px;
+    }
+
+    .toggle-row label {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      cursor: pointer;
+    }
   `;
 
   @state() private machineInfo: MachineInfo | null = null;
   @state() private devices: DeviceInfo[] = [];
   @state() private reaSettings: ReaSettings | null = null;
   @state() private gatewayUrl = localStorage.getItem('gateway-url') ?? '';
+  @state() private mockMode = isMockMode();
 
   connectedCallback(): void {
     super.connectedCallback();
@@ -103,6 +121,16 @@ export class SettingsView extends LitElement {
     if (results[0].status === 'fulfilled') this.machineInfo = results[0].value;
     if (results[1].status === 'fulfilled') this.devices = results[1].value;
     if (results[2].status === 'fulfilled') this.reaSettings = results[2].value;
+  }
+
+  private toggleMockMode() {
+    const next = !this.mockMode;
+    if (next) {
+      localStorage.setItem('mock-mode', 'true');
+    } else {
+      localStorage.removeItem('mock-mode');
+    }
+    window.location.reload();
   }
 
   private saveGatewayUrl() {
@@ -127,6 +155,19 @@ export class SettingsView extends LitElement {
           @input=${(e: Event) => (this.gatewayUrl = (e.target as HTMLInputElement).value)}
         />
         <button @click=${this.saveGatewayUrl}>Save</button>
+      </div>
+
+      <h3>Development</h3>
+      <div class="toggle-row">
+        <span class="field-label">Mock Mode</span>
+        <label>
+          <input
+            type="checkbox"
+            .checked=${this.mockMode}
+            @change=${this.toggleMockMode}
+          />
+          Simulate gateway data
+        </label>
       </div>
 
       ${this.machineInfo

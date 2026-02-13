@@ -1,6 +1,6 @@
 {
-  "id": "reaprime-pwa",
-  "name": "ReaPrime",
+  "id": "espresso-term",
+  "name": "Espresso Term",
   "version": "0.1.0",
   "description": "PWA skin for Decent Espresso via Streamline gateway",
   "entry": "index.html"

@@ -1,4 +1,11 @@
 import { getGatewayUrl } from './client.ts';
+import {
+  isMockMode,
+  createMockMachineSocket,
+  createMockScaleSocket,
+  createMockWaterSocket,
+  createMockSettingsSocket,
+} from './mock.ts';
 
 type MessageHandler<T> = (data: T) => void;
 
@@ -82,19 +89,21 @@ export class GatewaySocket<T> {
   }
 }
 
-// Pre-built channel instances
-export const machineSocket = new GatewaySocket<import('./types.ts').MachineSnapshot>(
-  'ws/v1/machine/snapshot'
-);
+// Pre-built channel instances (mock or real based on localStorage flag)
+const mock = isMockMode();
 
-export const shotSettingsSocket = new GatewaySocket<import('./types.ts').ShotSettings>(
-  'ws/v1/machine/shotSettings'
-);
+export const machineSocket = mock
+  ? createMockMachineSocket()
+  : new GatewaySocket<import('./types.ts').MachineSnapshot>('ws/v1/machine/snapshot');
 
-export const waterLevelsSocket = new GatewaySocket<import('./types.ts').WaterLevels>(
-  'ws/v1/machine/waterLevels'
-);
+export const shotSettingsSocket = mock
+  ? createMockSettingsSocket()
+  : new GatewaySocket<import('./types.ts').ShotSettings>('ws/v1/machine/shotSettings');
 
-export const scaleSocket = new GatewaySocket<import('./types.ts').ScaleSnapshot>(
-  'ws/v1/scale/snapshot'
-);
+export const waterLevelsSocket = mock
+  ? createMockWaterSocket()
+  : new GatewaySocket<import('./types.ts').WaterLevels>('ws/v1/machine/waterLevels');
+
+export const scaleSocket = mock
+  ? createMockScaleSocket()
+  : new GatewaySocket<import('./types.ts').ScaleSnapshot>('ws/v1/scale/snapshot');

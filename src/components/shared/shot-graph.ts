@@ -1,5 +1,5 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { customElement, property } from 'lit/decorators.js';
 import type { ShotSnapshot } from '../../api/types.ts';
 import uPlot from 'uplot';
 
@@ -8,25 +8,17 @@ export class ShotGraph extends LitElement {
   static styles = css`
     :host {
       display: block;
-      width: 100%;
-    }
-
-    .chart {
-      width: 100%;
       overflow: hidden;
-    }
-
-    .chart :global(.u-wrap) {
-      width: 100% !important;
     }
   `;
 
   @property({ type: Array }) measurements: ShotSnapshot[] = [];
-  @state() private chartWidth = 300;
 
   private plot: uPlot | null = null;
   private container: HTMLDivElement | null = null;
-  private resizeObserver: ResizeObserver | null = null;
+  private chartWidth = 0;
+  private chartHeight = 0;
+  private ro: ResizeObserver | null = null;
 
   private buildData(): uPlot.AlignedData {
     const time: number[] = [];
@@ -57,7 +49,7 @@ export class ShotGraph extends LitElement {
   private buildOpts(): uPlot.Options {
     return {
       width: this.chartWidth,
-      height: 200,
+      height: this.chartHeight,
       cursor: { show: false },
       legend: { show: false },
       scales: {
@@ -82,26 +74,40 @@ export class ShotGraph extends LitElement {
 
   protected firstUpdated(): void {
     this.container = this.renderRoot.querySelector('.chart') as HTMLDivElement;
-    this.resizeObserver = new ResizeObserver((entries) => {
-      const width = entries[0]?.contentRect.width;
-      if (width && width !== this.chartWidth) {
-        this.chartWidth = width;
-        this.rebuildChart();
+    this.ro = new ResizeObserver((entries) => {
+      const { width, height } = entries[0].contentRect;
+      const w = Math.floor(width);
+      const h = Math.floor(height);
+      if (w > 0 && h > 0 && (w !== this.chartWidth || h !== this.chartHeight)) {
+        this.chartWidth = w;
+        this.chartHeight = h;
+        if (this.plot) {
+          this.plot.setSize({ width: w, height: h });
+        } else {
+          this.rebuildChart();
+        }
       }
     });
-    this.resizeObserver.observe(this.container);
-    this.rebuildChart();
+    this.ro.observe(this);
   }
 
   protected updated(changed: Map<PropertyKey, unknown>): void {
     if (changed.has('measurements')) {
-      this.rebuildChart();
+      const data = this.buildData();
+      if (data[0].length === 0) return;
+      if (this.plot) {
+        this.plot.setData(data);
+      } else {
+        this.rebuildChart();
+      }
     }
   }
 
   private rebuildChart(): void {
-    if (!this.container) return;
+    if (!this.container || this.chartWidth === 0 || this.chartHeight === 0) return;
     this.plot?.destroy();
+    this.plot = null;
+    this.container.innerHTML = '';
     const data = this.buildData();
     if (data[0].length === 0) return;
     this.plot = new uPlot(this.buildOpts(), data, this.container);
@@ -109,7 +115,7 @@ export class ShotGraph extends LitElement {
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    this.resizeObserver?.disconnect();
+    this.ro?.disconnect();
     this.plot?.destroy();
     this.plot = null;
   }

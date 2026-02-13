@@ -2,20 +2,18 @@ import { LitElement, html, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import './components/shared/status-bar.ts';
 import './components/shared/nav-bar.ts';
-import './components/views/dashboard.ts';
-import './components/views/shot-view.ts';
+import './components/views/brew-view.ts';
 import './components/views/profiles.ts';
-import './components/views/workflow.ts';
 import './components/views/history.ts';
 import './components/views/settings.ts';
 
-type Route = 'dashboard' | 'shot' | 'profiles' | 'workflow' | 'history' | 'settings';
+type Route = 'brew' | 'history' | 'profiles' | 'settings';
 
-const ROUTES: Route[] = ['dashboard', 'shot', 'profiles', 'workflow', 'history', 'settings'];
+const ROUTES: Route[] = ['brew', 'history', 'profiles', 'settings'];
 
 function parseRoute(): Route {
   const hash = window.location.hash.replace('#/', '');
-  return ROUTES.includes(hash as Route) ? (hash as Route) : 'dashboard';
+  return ROUTES.includes(hash as Route) ? (hash as Route) : 'brew';
 }
 
 @customElement('rea-app')
@@ -53,14 +51,10 @@ export class ReaApp extends LitElement {
 
   private renderView() {
     switch (this.route) {
-      case 'dashboard':
-        return html`<dashboard-view></dashboard-view>`;
-      case 'shot':
-        return html`<shot-view></shot-view>`;
+      case 'brew':
+        return html`<brew-view></brew-view>`;
       case 'profiles':
         return html`<profiles-view></profiles-view>`;
-      case 'workflow':
-        return html`<workflow-view></workflow-view>`;
       case 'history':
         return html`<history-view></history-view>`;
       case 'settings':

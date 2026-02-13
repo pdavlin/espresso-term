@@ -1,7 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
-type Route = 'dashboard' | 'shot' | 'profiles' | 'workflow' | 'history' | 'settings';
+type Route = 'brew' | 'history' | 'profiles' | 'settings';
 
 interface NavItem {
   route: Route;
@@ -9,11 +9,9 @@ interface NavItem {
 }
 
 const items: NavItem[] = [
-  { route: 'dashboard', label: 'Home' },
-  { route: 'shot', label: 'Shot' },
-  { route: 'profiles', label: 'Profiles' },
-  { route: 'workflow', label: 'Workflow' },
+  { route: 'brew', label: 'Brew' },
   { route: 'history', label: 'History' },
+  { route: 'profiles', label: 'Profiles' },
   { route: 'settings', label: 'Settings' },
 ];
 
@@ -60,7 +58,7 @@ export class NavBar extends LitElement {
     }
   `;
 
-  @property() active: Route = 'dashboard';
+  @property() active: Route = 'brew';
 
   render() {
     return html`
