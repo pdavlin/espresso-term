@@ -4,10 +4,21 @@ export interface CoffeeBag {
   id: string;
   name: string;
   roaster: string;
+  roasterRecordId: string;
   country: string;
   processing: string;
   roastLevel: string;
+  roastDate: string | null;
   archived: boolean;
+}
+
+export interface CoffeeBagUpdate {
+  name?: string;
+  roasterRecordId?: string;
+  country?: string;
+  processing?: string;
+  roastLevel?: string;
+  roastDate?: string | null;
 }
 
 interface AirtableConfig {
@@ -78,6 +89,7 @@ async function fetchCoffeeBagsRaw(): Promise<AirtableRecord[]> {
   params.append('fields[]', 'Country');
   params.append('fields[]', 'Processing');
   params.append('fields[]', 'Roast level');
+  params.append('fields[]', 'Roast date');
   params.append('fields[]', 'Archived at');
 
   return airtableFetch('Coffee Bags', params);
@@ -130,9 +142,11 @@ export async function getCoffeeBags(): Promise<CoffeeBag[]> {
       id: rec.id,
       name: (rec.fields['Name'] as string) ?? '',
       roaster: roasterName,
+      roasterRecordId: roasterIds.length > 0 ? roasterIds[0] : '',
       country: (rec.fields['Country'] as string) ?? '',
       processing: (rec.fields['Processing'] as string) ?? '',
       roastLevel: (rec.fields['Roast level'] as string) ?? '',
+      roastDate: (rec.fields['Roast date'] as string) ?? null,
       archived: Boolean(rec.fields['Archived at']),
     };
   });
@@ -148,4 +162,44 @@ export async function getCoffeeBags(): Promise<CoffeeBag[]> {
 
 export function clearCoffeeBagCache(): void {
   cachedBags = null;
+}
+
+let cachedRoasters: Map<string, string> | null = null;
+
+export async function getRoasters(): Promise<Map<string, string>> {
+  if (cachedRoasters) return cachedRoasters;
+  cachedRoasters = await fetchRoasters();
+  return cachedRoasters;
+}
+
+export async function updateCoffeeBag(recordId: string, update: CoffeeBagUpdate): Promise<void> {
+  if (isMockCoffee()) {
+    console.log('[mock] updateCoffeeBag', recordId, update);
+    return;
+  }
+
+  const { pat, baseId } = getAirtableConfig();
+  if (!pat || !baseId) throw new Error('Airtable not configured');
+
+  const fields: Record<string, unknown> = {};
+  if (update.name !== undefined) fields['Name'] = update.name;
+  if (update.roasterRecordId !== undefined) fields['Roaster'] = [update.roasterRecordId];
+  if (update.country !== undefined) fields['Country'] = update.country;
+  if (update.processing !== undefined) fields['Processing'] = update.processing;
+  if (update.roastLevel !== undefined) fields['Roast level'] = update.roastLevel;
+  if (update.roastDate !== undefined) fields['Roast date'] = update.roastDate;
+
+  const url = `https://api.airtable.com/v0/${baseId}/${encodeURIComponent('Coffee Bags')}/${recordId}`;
+  const response = await fetch(url, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${pat}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ fields }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Airtable ${response.status}: ${response.statusText}`);
+  }
 }

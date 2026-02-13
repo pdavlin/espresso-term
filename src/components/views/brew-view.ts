@@ -10,7 +10,8 @@ import {
 } from '../../api/client.ts';
 import { formatPressure, formatFlow, formatWeight, formatDuration } from '../../utils/format.ts';
 import type { Profile, ProfileRecord } from '../../api/types.ts';
-import { getCoffeeBags, type CoffeeBag } from '../../api/airtable.ts';
+import { getCoffeeBags, clearCoffeeBagCache, type CoffeeBag } from '../../api/airtable.ts';
+import '../shared/coffee-bag-edit.ts';
 import uPlot from 'uplot';
 import uPlotCSS from 'uplot/dist/uPlot.min.css?inline';
 
@@ -186,6 +187,22 @@ export class BrewView extends LitElement {
       margin: var(--space-xs) 0;
     }
 
+    .btn-edit-bag {
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      font-family: inherit;
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      padding: var(--space-xs) 0;
+      transition: color 0.15s ease-out;
+    }
+
+    .btn-edit-bag:active {
+      color: var(--color-accent);
+    }
+
     /* Shot step - fixed overlay that fills between status bar and nav */
 
     .shot-layout {
@@ -337,6 +354,7 @@ export class BrewView extends LitElement {
   @state() private coffeeBags: CoffeeBag[] = [];
   @state() private selectedCoffee: CoffeeBag | null = null;
   @state() private showCoffeeList = false;
+  @state() private showCoffeeEdit = false;
 
   private plot: uPlot | null = null;
   private chartContainer: HTMLDivElement | null = null;
@@ -376,12 +394,26 @@ export class BrewView extends LitElement {
   }
 
   private toggleCoffeeList() {
+    this.showCoffeeEdit = false;
     this.showCoffeeList = !this.showCoffeeList;
   }
 
   private selectCoffee(bag: CoffeeBag) {
     this.selectedCoffee = bag;
     this.showCoffeeList = false;
+  }
+
+  private async onCoffeeBagSaved(e: CustomEvent) {
+    const bag = e.detail.bag as CoffeeBag;
+    this.selectedCoffee = bag;
+    this.showCoffeeEdit = false;
+    clearCoffeeBagCache();
+    try {
+      this.coffeeBags = await getCoffeeBags();
+      this.selectedCoffee = this.coffeeBags.find((b) => b.id === bag.id) ?? bag;
+    } catch {
+      // Non-critical: cache will refresh on next full load
+    }
   }
 
   private adjustDose(delta: number) {
@@ -616,7 +648,24 @@ export class BrewView extends LitElement {
                 `
               : html`<div class="picker-card-empty">Select coffee</div>`}
           </div>
+          ${this.selectedCoffee && !this.showCoffeeList && !this.showCoffeeEdit
+            ? html`
+                <button
+                  class="btn-edit-bag"
+                  @click=${() => { this.showCoffeeEdit = true; }}
+                >edit bag info</button>
+              `
+            : nothing}
           ${this.showCoffeeList ? this.renderCoffeeList() : nothing}
+          ${this.showCoffeeEdit && this.selectedCoffee
+            ? html`
+                <coffee-bag-edit
+                  .bag=${this.selectedCoffee}
+                  @coffee-bag-saved=${this.onCoffeeBagSaved}
+                  @coffee-bag-edit-cancel=${() => { this.showCoffeeEdit = false; }}
+                ></coffee-bag-edit>
+              `
+            : nothing}
           <div class="actions">
             <button class="btn btn-primary btn-full" @click=${() => { this.step = 'profile'; }}>
               Next
