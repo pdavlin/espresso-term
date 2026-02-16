@@ -223,6 +223,28 @@ export class BrewView extends LitElement {
       overflow: hidden;
     }
 
+    .chart-legend {
+      flex-shrink: 0;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 2px var(--space-md);
+      padding: var(--space-xs) var(--space-md);
+    }
+
+    .chart-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      color: var(--color-text-secondary);
+    }
+
+    .chart-legend-swatch {
+      width: 12px;
+      height: 3px;
+    }
+
     .shot-controls {
       flex-shrink: 0;
       padding: var(--space-sm) var(--space-md);
@@ -347,6 +369,7 @@ export class BrewView extends LitElement {
 
   @state() private step: BrewStep = 'dose';
   @state() private shotComplete = false;
+  private shotEndTimer: ReturnType<typeof setTimeout> | null = null;
   @state() private doseIn = 18;
   @state() private selectedProfile: Profile | null = null;
   @state() private profiles: ProfileRecord[] = [];
@@ -429,12 +452,15 @@ export class BrewView extends LitElement {
   }
 
   private async selectProfile(record: ProfileRecord) {
+    this.selectedProfile = record.profile;
+    this.showProfileList = false;
     try {
-      await uploadProfile(record.profile);
-      this.selectedProfile = record.profile;
-      this.showProfileList = false;
+      await Promise.all([
+        uploadProfile(record.profile),
+        updateWorkflow({ profile: record.profile }),
+      ]);
     } catch {
-      // Upload failed
+      // Gateway not available
     }
   }
 
@@ -449,6 +475,10 @@ export class BrewView extends LitElement {
       await updateWorkflow(partial);
     } catch {
       // Non-critical
+    }
+    if (this.shotEndTimer) {
+      clearTimeout(this.shotEndTimer);
+      this.shotEndTimer = null;
     }
     this.machine.startRecording();
     this.shotComplete = false;
@@ -469,6 +499,10 @@ export class BrewView extends LitElement {
   }
 
   private resetToStart() {
+    if (this.shotEndTimer) {
+      clearTimeout(this.shotEndTimer);
+      this.shotEndTimer = null;
+    }
     this.teardownChart();
     this.machine.stopRecording();
     this.shotComplete = false;
@@ -479,11 +513,15 @@ export class BrewView extends LitElement {
     if (
       this.step === 'shot' &&
       !this.shotComplete &&
+      !this.shotEndTimer &&
       this.machine.isRecording &&
       this.machine.recordedMeasurements.length > 0 &&
       this.machine.state !== 'espresso'
     ) {
-      this.shotComplete = true;
+      this.shotEndTimer = setTimeout(() => {
+        this.shotComplete = true;
+        this.shotEndTimer = null;
+      }, 2000);
     }
 
     if (this.step === 'shot') {
@@ -553,6 +591,9 @@ export class BrewView extends LitElement {
     const flow: number[] = [];
     const weight: number[] = [];
     const temp: number[] = [];
+    const weightFlow: number[] = [];
+    const targetPressure: number[] = [];
+    const targetFlow: number[] = [];
 
     for (const m of measurements) {
       const t = new Date(m.machine.timestamp).getTime() / 1000;
@@ -561,6 +602,9 @@ export class BrewView extends LitElement {
       flow.push(m.machine.flow);
       weight.push(m.scale?.weight ?? 0);
       temp.push(m.machine.groupTemperature);
+      weightFlow.push(m.scale?.weightFlow ?? 0);
+      targetPressure.push(m.machine.targetPressure);
+      targetFlow.push(m.machine.targetFlow);
     }
 
     if (time.length > 0) {
@@ -570,7 +614,7 @@ export class BrewView extends LitElement {
       }
     }
 
-    return [time, pressure, flow, weight, temp];
+    return [time, pressure, flow, weight, temp, weightFlow, targetPressure, targetFlow];
   }
 
   private buildChartOpts(): uPlot.Options {
@@ -581,20 +625,26 @@ export class BrewView extends LitElement {
       legend: { show: false },
       scales: {
         x: { time: false },
-        y: { auto: true },
+        y: {
+          auto: false,
+          range: (_self: uPlot, _min: number, max: number) => [0, Math.max(11, max)],
+        },
         y2: { auto: true },
       },
       axes: [
-        { stroke: '#655d5d', grid: { stroke: '#292424' } },
-        { stroke: '#655d5d', grid: { stroke: '#292424' }, size: 40 },
-        { side: 1, stroke: '#655d5d', size: 40, grid: { show: false } },
+        { stroke: '#655d5d', grid: { stroke: '#292424' }, ticks: { show: false } },
+        { stroke: '#655d5d', grid: { stroke: '#292424' }, size: 40, ticks: { show: false } },
+        { side: 1, stroke: '#655d5d', size: 40, grid: { show: false }, ticks: { show: false } },
       ],
       series: [
         {},
-        { label: 'Pressure', stroke: '#5485b6', width: 2, scale: 'y' },
-        { label: 'Flow', stroke: '#4b8b8b', width: 2, scale: 'y' },
-        { label: 'Weight', stroke: '#b45a3c', width: 2, scale: 'y2' },
-        { label: 'Temp', stroke: '#ca4949', width: 1, scale: 'y2', dash: [4, 4] },
+        { label: 'Pressure', stroke: '#5485b6', width: 2, scale: 'y', points: { show: false } },
+        { label: 'Flow', stroke: '#4b8b8b', width: 2, scale: 'y', points: { show: false } },
+        { label: 'Weight', stroke: '#b45a3c', width: 2, scale: 'y2', dash: [4, 4], points: { show: false } },
+        { label: 'Temp', stroke: '#ca4949', width: 1, scale: 'y2', dash: [4, 4], points: { show: false } },
+        { label: 'Weight/s', stroke: '#b45a3c', width: 2, scale: 'y', points: { show: false } },
+        { label: 'Target Pressure', stroke: '#5485b6', width: 1, scale: 'y', dash: [4, 4], points: { show: false } },
+        { label: 'Target Flow', stroke: '#4b8b8b', width: 1, scale: 'y', dash: [4, 4], points: { show: false } },
       ],
     };
   }
@@ -769,6 +819,15 @@ export class BrewView extends LitElement {
     return html`
       <div class="shot-layout">
         <div class="chart-area"></div>
+        <div class="chart-legend">
+          <span class="chart-legend-item"><span class="chart-legend-swatch" style="background:#5485b6"></span>Pressure</span>
+          <span class="chart-legend-item"><span class="chart-legend-swatch" style="background:#4b8b8b"></span>Flow</span>
+          <span class="chart-legend-item"><span class="chart-legend-swatch" style="background:transparent;border-top:2px dashed #b45a3c;height:0"></span>Weight</span>
+          <span class="chart-legend-item"><span class="chart-legend-swatch" style="background:transparent;border-top:1px dashed #ca4949;height:0"></span>Temp</span>
+          <span class="chart-legend-item"><span class="chart-legend-swatch" style="background:#b45a3c"></span>Weight/s</span>
+          <span class="chart-legend-item"><span class="chart-legend-swatch" style="background:transparent;border-top:1px dashed #5485b6;height:0"></span>Goal P</span>
+          <span class="chart-legend-item"><span class="chart-legend-swatch" style="background:transparent;border-top:1px dashed #4b8b8b;height:0"></span>Goal F</span>
+        </div>
         <div class="shot-controls">
           <div class="shot-timer">${formatDuration(this.shotDuration)}</div>
 
